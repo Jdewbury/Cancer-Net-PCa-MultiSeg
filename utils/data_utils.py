@@ -32,7 +32,7 @@ def list_npy_paths(directory, modality='cdis'):
 
     Args:
         directory: Directory path to search for nnpy files.
-        modality: Desired modality of interest
+        modality: Desired modality of interest.
 
     Returns:
         Sorted array of file paths for each npy file found.
@@ -45,7 +45,7 @@ def list_img_paths(directory, modality='cdis'):
 
     Args:
         directory: Directory path to search for nnpy files.
-        modality: Desired modality of interest
+        modality: Desired modality of interest.
 
     Returns:
         Sorted array of file paths for each image file found.
@@ -62,6 +62,8 @@ def modality_to_numpy(directory, modality='cdis', channel_idx=0):
 
     Args:
         directory: Directory path to convert modality file to numpy array.
+        modality: Desired modality of interest.
+        channel_idx: Desired channel for DWI images.
 
     Returns:
         Numpy array of type uint8.
