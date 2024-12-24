@@ -85,10 +85,13 @@ def modality_to_numpy(directory, modality='cdis'):
     else:
         raise ValueError(f"Invalid modality name: {modality}. Choose from 'cdis', 'dwi', or 'adc'.")
 
-    img_linear_window = [img.min(), img.max()]
-    img_clip = np.clip(img, *img_linear_window)
-    norm_img = (img_clip - img_linear_window[0]) / (
-        img_linear_window[1] - img_linear_window[0]
-    )
+    norm_img = np.zeros_like(img)
+    channels = img.shape[0] if len(img.shape) == 4 else 1
+    for c in range(channels):
+        img_linear_window = [img[c].min(), img[c].max()]
+        img_clip = np.clip(img[c], *img_linear_window)
+        norm_img[c] = (img_clip - img_linear_window[0]) / (
+            img_linear_window[1] - img_linear_window[0]
+        )
 
     return norm_img

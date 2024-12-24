@@ -57,7 +57,6 @@ class CancerNetPCaDataset(Dataset):
                 mask = (mask > 0).astype(np.float32)
 
                 num_slices = min(img_np.shape[2], mask.shape[2])
-
                 for slice in range(num_slices):
                     if len(img_np.shape) == 4:
                         # take all channels for the current slice
