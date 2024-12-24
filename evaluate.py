@@ -15,8 +15,6 @@ from types import SimpleNamespace
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='unet', type=str, help='Model architecture that was used for training.')
-parser.add_argument('--modality', default='cdis', type=str, choices=['cdis', 'dwi', 'adc'],
-                    help='Image modality to be evaluated.')
 parser.add_argument('--weight_dir', default='models', type=str, help='Directory containing model weight(s).')
 parser.add_argument('--param_dir', default='scores', type=str, help='Directory containing model parameters.')
 parser.add_argument('--params', action='store_true', help='Print total number of model parameters and FLOPs.')
@@ -29,23 +27,17 @@ model_loss = []
 model_dice = []
 inference_time = []
 
-if args.save:
-    save_dir = f'evaluate/{args.modality}/{args.model}'
-    os.makedirs(save_dir, exist_ok=True)
-
 # check if evaluating single model, or set of models
 if args.model.count('-') > 0:
     model_name = args.model.split('-')[0]
 else:
     model_name = args.model
 
-folder_dir = os.path.join(args.param_dir, args.modality)
-
-for score in os.listdir(folder_dir):
+for score in os.listdir(args.param_dir):
     if score.startswith(args.model):
-        saved_params = np.load(f'{folder_dir}/{score}/params.npy', allow_pickle=True).tolist()
+        saved_params = np.load(f'{args.param_dir}/{score}/params.npy', allow_pickle=True).tolist()
         saved_args = SimpleNamespace(**saved_params)
-        model_weights = torch.load(f'{args.weight_dir}/{saved_args.modality}/{score}/CancerNetPCa.pth', map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        model_weights = torch.load(f'{args.weight_dir}/{score}/CancerNetPCa.pth', map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
         model = get_model(saved_args)
 
@@ -113,8 +105,10 @@ scores = {
 }
 
 if args.save:
-    print(f'Saving values at {save_dir}')
+    save_dir = f'evaluate/{saved_args.modality}/{saved_args.model}'
+    os.makedirs(save_dir, exist_ok=True)
     np.save(f'{save_dir}/scores.npy', scores)
+    print(f'Saving values at {save_dir}')
 
 
 
