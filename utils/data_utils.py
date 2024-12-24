@@ -57,7 +57,7 @@ def list_img_paths(directory, modality='cdis'):
     else:
         raise ValueError(f"Invalid modality name: {modality}. Choose from 'cdis', 'dwi', or 'adc'.")
 
-def modality_to_numpy(directory, modality='cdis', channel_idx=0):
+def modality_to_numpy(directory, modality='cdis'):
     """Load a modality image and convert it to a numpy array.
 
     Args:
@@ -70,11 +70,12 @@ def modality_to_numpy(directory, modality='cdis', channel_idx=0):
     """
     if modality == 'adc':
         img_np = np.load(directory, allow_pickle=True)
-        img = np.transpose(img_np, (2, 1, 0))
+        img_t = np.transpose(img_np, (2, 1, 0))
+        img = np.flip(img_t, axis=1)
     elif modality == 'dwi':
         img_np = np.load(directory, allow_pickle=True)
-        img = np.transpose(img_np, (3, 2, 1, 0))
-        img = img[:, :, :, channel_idx]
+        img = np.transpose(img_np, (0, 3, 2, 1))
+        #img = img[:, :, :, channel_idx]
     elif modality == 'cdis':
         img_nib = nib.load(directory).get_fdata()
         img_nib = np.nan_to_num(img_nib)

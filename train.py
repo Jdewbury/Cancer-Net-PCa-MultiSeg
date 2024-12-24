@@ -4,7 +4,6 @@ import torch.nn as nn
 from torchvision import transforms
 import numpy as np
 from monai.metrics import DiceMetric
-from utils.data_utils import list_img_paths, list_prostate_paths
 from dataset import CancerNetPCa
 from utils.initialize import get_model, get_optimizer, get_scheduler
 
@@ -23,7 +22,6 @@ parser.add_argument('--mask_dir', default='data_2', type=str, help='Directory co
 parser.add_argument('--modality', default='cdis', type=str, choices=['cdis', 'dwi', 'adc'],
                     help='Image modality to be evaluated.')
 parser.add_argument('--prostate_mask', action='store_true', help='Flag to use prostate mask.')
-parser.add_argument('--channel_idx', default=0, type=int, help='Desired channel for DWI images.')
 parser.add_argument('--size', default=128, type=int, help='Desired size of image and mask.')
 parser.add_argument('--val_interval', default=2, type=int, help='Epoch interval for evaluation on validation set.')
 parser.add_argument('--lr_step', default=0.1, type=float, help='Epoch interval for evaluation on validation set.')
@@ -48,8 +46,8 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-dataset = CancerNetPCa(img_dir=args.img_dir, mask_dir=args.mask_dir, modality=args.modality, channel_idx=args.channel_idx, 
-                       seed=args.seed, batch_size=args.batch_size, prostate=args.prostate_mask, transform=transform)
+dataset = CancerNetPCa(img_dir=args.img_dir, mask_dir=args.mask_dir, modality=args.modality, seed=args.seed, 
+                       batch_size=args.batch_size, prostate=args.prostate_mask, transform=transform)
 
 loss_ce = nn.BCEWithLogitsLoss(reduction='mean')
 dice_metric = DiceMetric(include_background=True, reduction='mean', get_not_nans=False)
