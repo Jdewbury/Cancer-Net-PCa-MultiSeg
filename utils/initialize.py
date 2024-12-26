@@ -11,12 +11,11 @@ def get_model(args):
     Returns:
         Initialization of model.
     """
-    num_dims = 3 if args.modality == 'dwi' else 2
     in_channels = 3 if args.modality == 'dwi' else 1 
     
     if args.model == 'segresnet':
         return monai.networks.nets.SegResNet(
-            spatial_dims=num_dims,
+            spatial_dims=2,
             blocks_down=[1, 2, 2, 4],
             blocks_up=[1, 1, 1],
             init_filters=args.init_filters,
