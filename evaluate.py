@@ -47,8 +47,8 @@ for score in os.listdir(args.param_dir):
             transforms.ToTensor(),
         ])
 
-        dataset = CancerNetPCa(img_dir=saved_args.img_dir, mask_dir=saved_args.mask_dir, modality=saved_args.modality, channel_idx=saved_args.channel_idx, 
-                               seed=saved_args.seed, batch_size=saved_args.batch_size, prostate=saved_args.prostate_mask, transform=transform)
+        dataset = CancerNetPCa(img_dir=saved_args.img_dir, mask_dir=saved_args.mask_dir, modality=saved_args.modality, seed=saved_args.seed, 
+                               batch_size=saved_args.batch_size, prostate=saved_args.prostate_mask, transform=transform)
 
         loss_ce = nn.BCEWithLogitsLoss(reduction='mean')
         dice_metric = DiceMetric(include_background=True, reduction='mean', get_not_nans=False)
