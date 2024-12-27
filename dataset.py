@@ -49,13 +49,12 @@ class CancerNetPCaDataset(Dataset):
                 imgs_combined = []
                 for i, m in zip(img, self.modality):
                     mod_img = modality_to_numpy(i, m)
-                    print(m, mod_img.shape)
                     if len(mod_img.shape) == 4:
                         imgs_combined.append(mod_img)
                     else:
                         # add channel dim
                         imgs_combined.append(mod_img[None, ...])
-                        
+
                 img_np = np.concatenate(imgs_combined, axis=0)
                 prostate_np = np.load(lesion)
                 lesion_np = np.load(prostate)
