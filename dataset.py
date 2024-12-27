@@ -5,15 +5,16 @@ from torch.utils.data import Dataset, DataLoader
 from utils.data_utils import modality_to_numpy, list_img_paths, list_prostate_paths
 
 class CancerNetPCa:
-    def __init__(self, img_dir, mask_dir, modality='cdis', seed=42, batch_size=10, train_split=0.7, test_split=0.15, prostate=False, transform=None):
+    def __init__(self, img_dir, mask_dir, modality=['cdis'], seed=42, batch_size=10, train_split=0.7, test_split=0.15, prostate=False, transform=None):
         np.random.seed(seed)
         workers = os.cpu_count()
         num_workers = max(1, workers - 2)
 
-        img_path = list_img_paths(img_dir, modality)
+        img_path = np.array([list_img_paths(dir, m) for dir, m in zip(img_dir, modality)])
+
         mask_path = list_prostate_paths(mask_dir)
         
-        dataset_size = len(img_path)
+        dataset_size = mask_path.shape[1]
         idxs = np.arange(dataset_size)
         np.random.shuffle(idxs)
 
@@ -25,9 +26,9 @@ class CancerNetPCa:
         test_idx = idxs[train_size:train_size + test_size]
         val_idx = idxs[dataset_size - val_size:]
 
-        train_dataset = CancerNetPCaDataset(img_path[train_idx], mask_path[:, train_idx], modality, prostate, transform)
-        val_dataset = CancerNetPCaDataset(img_path[val_idx], mask_path[:, val_idx], modality, prostate, transform)
-        test_dataset = CancerNetPCaDataset(img_path[test_idx], mask_path[:, test_idx], modality, prostate, transform)
+        train_dataset = CancerNetPCaDataset(img_path[:, train_idx], mask_path[:, train_idx], modality, prostate, transform)
+        val_dataset = CancerNetPCaDataset(img_path[:, val_idx], mask_path[:, val_idx], modality, prostate, transform)
+        test_dataset = CancerNetPCaDataset(img_path[:, test_idx], mask_path[:, test_idx], modality, prostate, transform)
 
         self.train = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         self.val = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers)
@@ -44,8 +45,18 @@ class CancerNetPCaDataset(Dataset):
 
         def _prepare_data(self):
             data = []
-            for img, lesion, prostate in zip(self.img_path, self.mask_path[0], self.mask_path[1]):
-                img_np = modality_to_numpy(img, self.modality)
+            for img, lesion, prostate in zip(self.img_path.T, self.mask_path[0], self.mask_path[1]):
+                imgs_combined = []
+                for i, m in zip(img, self.modality):
+                    mod_img = modality_to_numpy(i, m)
+                    print(m, mod_img.shape)
+                    if len(mod_img.shape) == 4:
+                        imgs_combined.append(mod_img)
+                    else:
+                        # add channel dim
+                        imgs_combined.append(mod_img[None, ...])
+                        
+                img_np = np.concatenate(imgs_combined, axis=0)
                 prostate_np = np.load(lesion)
                 lesion_np = np.load(prostate)
 
