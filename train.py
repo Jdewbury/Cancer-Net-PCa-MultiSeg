@@ -17,10 +17,11 @@ parser.add_argument('--seed', default=42, type=int, help='Seed to use for splitt
 parser.add_argument('--learning_rate', default=0.001, type=float, help='Initial learning rate for training.')
 parser.add_argument('--model', default='unet', type=str, choices=['segresnet', 'unet', 'swinunetr', 'attentionunet', 'mambaunet'],
                     help='Model architecture to be used for training.')
-parser.add_argument('--img_dir', default='data/images', type=str, help='Directory containing image data.')
+parser.add_argument('--img_dir', default=['data/images'], nargs='+', type=str, 
+                    help='Directory containing image data. Pass multiple directories for more than one modality.')
 parser.add_argument('--mask_dir', default='data_2', type=str, help='Directory containing mask data.')
-parser.add_argument('--modality', default='cdis', type=str, choices=['cdis', 'dwi', 'adc'],
-                    help='Image modality to be evaluated.')
+parser.add_argument('--modality', default=['cdis'], nargs='+', type=str, choices=['cdis', 'dwi', 'adc'],
+                   help='One or more image modalities to evaluate')
 parser.add_argument('--prostate_mask', action='store_true', help='Flag to use prostate mask.')
 parser.add_argument('--size', default=128, type=int, help='Desired size of image and mask.')
 parser.add_argument('--val_interval', default=2, type=int, help='Epoch interval for evaluation on validation set.')

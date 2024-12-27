@@ -11,7 +11,12 @@ def get_model(args):
     Returns:
         Initialization of model.
     """
-    in_channels = 3 if args.modality == 'dwi' else 1 
+    modality_channels = {
+        'dwi': 3,
+        'adc': 1,
+        'cdis': 1
+    }
+    in_channels = sum([modality_channels[m] for m in args.modality])
     
     if args.model == 'segresnet':
         return monai.networks.nets.SegResNet(

@@ -79,7 +79,7 @@ def modality_to_numpy(directory, modality='cdis'):
     elif modality == 'cdis':
         img_nib = nib.load(directory).get_fdata()
         img_nib = np.nan_to_num(img_nib)
-        img_np = np.array(img).astype(np.uint8)
+        img_np = np.array(img_nib).astype(np.uint8)
         img_f = img_np.astype(float)
         img = img_f.astype(np.float32)
     else:
