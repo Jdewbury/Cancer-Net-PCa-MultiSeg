@@ -4,7 +4,6 @@ import torch.nn as nn
 from torchvision import transforms
 import numpy as np
 from monai.metrics import DiceMetric
-from utils.data_utils import list_nii_paths, list_prostate_paths
 from dataset import CancerNetPCa
 from utils.initialize import get_model
 from thop import profile

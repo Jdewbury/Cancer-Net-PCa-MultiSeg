@@ -53,7 +53,7 @@ dataset = CancerNetPCa(img_dir=args.img_dir, mask_dir=args.mask_dir, modality=ar
 loss_ce = nn.BCEWithLogitsLoss(reduction='mean')
 dice_metric = DiceMetric(include_background=True, reduction='mean', get_not_nans=False)
 
-dir = f'{args.modality}/{args.prostate_mask*"pro-"}{args.model}'
+dir = f'{"-".join(args.modality)}/{args.prostate_mask*"pro-"}{args.model}'
 
 if args.save:
     count = 1

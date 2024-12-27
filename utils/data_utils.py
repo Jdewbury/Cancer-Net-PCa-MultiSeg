@@ -63,7 +63,6 @@ def modality_to_numpy(directory, modality='cdis'):
     Args:
         directory: Directory path to convert modality file to numpy array.
         modality: Desired modality of interest.
-        channel_idx: Desired channel for DWI images.
 
     Returns:
         Numpy array of type uint8.
