@@ -74,7 +74,7 @@ def modality_to_numpy(directory, modality='cdis'):
     elif modality == 'dwi':
         img_np = np.load(directory, allow_pickle=True)
         img_t = np.transpose(img_np, (0, 3, 2, 1))
-        img = np.flip(img_t, axis=1)
+        img = np.flip(img_t, axis=2)
     elif modality == 'cdis':
         img_nib = nib.load(directory).get_fdata()
         img_nib = np.nan_to_num(img_nib)

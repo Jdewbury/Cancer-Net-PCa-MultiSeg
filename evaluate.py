@@ -104,7 +104,7 @@ scores = {
 }
 
 if args.save:
-    save_dir = f'evaluate/{saved_args.modality}/{saved_args.model}'
+    save_dir = f'evaluate/{"-".join(sorted(saved_args.modality))}/{saved_args.model}'
     os.makedirs(save_dir, exist_ok=True)
     np.save(f'{save_dir}/scores.npy', scores)
     print(f'Saving values at {save_dir}')
