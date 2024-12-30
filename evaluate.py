@@ -4,7 +4,6 @@ import torch.nn as nn
 from torchvision import transforms
 import numpy as np
 from monai.metrics import DiceMetric
-from utils.data_utils import list_nii_paths, list_prostate_paths
 from dataset import CancerNetPCa
 from utils.initialize import get_model
 from thop import profile
@@ -15,8 +14,6 @@ from types import SimpleNamespace
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='unet', type=str, help='Model architecture that was used for training.')
-parser.add_argument('--img_dir', default='data/images', type=str, help='Directory containing image data.')
-parser.add_argument('--mask_dir', default='data_2', type=str, help='Directory containing mask data.')
 parser.add_argument('--weight_dir', default='models', type=str, help='Directory containing model weight(s).')
 parser.add_argument('--param_dir', default='scores', type=str, help='Directory containing model parameters.')
 parser.add_argument('--params', action='store_true', help='Print total number of model parameters and FLOPs.')
@@ -28,10 +25,6 @@ args_dict = vars(args)
 model_loss = []
 model_dice = []
 inference_time = []
-
-if args.save:
-    save_dir = f'evaluate/{args.model}'
-    os.makedirs(save_dir, exist_ok=True)
 
 # check if evaluating single model, or set of models
 if args.model.count('-') > 0:
@@ -47,17 +40,14 @@ for score in os.listdir(args.param_dir):
 
         model = get_model(saved_args)
 
-        img_paths = list_nii_paths(saved_args.img_dir)
-        mask_paths = list_prostate_paths(saved_args.mask_dir)
-
         transform = transforms.Compose([
             transforms.ToPILImage(),
             transforms.Resize((saved_args.size, saved_args.size)),
             transforms.ToTensor(),
         ])
 
-        dataset = CancerNetPCa(img_path=img_paths, mask_path=mask_paths, seed=saved_args.seed, batch_size=saved_args.batch_size,
-                                prostate=saved_args.prostate_mask, transform=transform)
+        dataset = CancerNetPCa(img_dir=saved_args.img_dir, mask_dir=saved_args.mask_dir, modality=saved_args.modality, seed=saved_args.seed, 
+                               batch_size=saved_args.batch_size, prostate=saved_args.prostate_mask, transform=transform)
 
         loss_ce = nn.BCEWithLogitsLoss(reduction='mean')
         dice_metric = DiceMetric(include_background=True, reduction='mean', get_not_nans=False)
@@ -114,8 +104,10 @@ scores = {
 }
 
 if args.save:
-    print(f'Saving values at {save_dir}')
+    save_dir = f'evaluate/{"-".join(sorted(saved_args.modality))}/{saved_args.model}'
+    os.makedirs(save_dir, exist_ok=True)
     np.save(f'{save_dir}/scores.npy', scores)
+    print(f'Saving values at {save_dir}')
 
 
 
