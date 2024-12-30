@@ -4,7 +4,6 @@ import torch.nn as nn
 from torchvision import transforms
 import numpy as np
 from monai.metrics import DiceMetric
-from utils.data_utils import list_nii_paths, list_prostate_paths, load_weights
 from dataset import CancerNetPCa
 from utils.initialize import get_model, get_optimizer, get_scheduler
 
@@ -18,8 +17,11 @@ parser.add_argument('--seed', default=42, type=int, help='Seed to use for splitt
 parser.add_argument('--learning_rate', default=0.001, type=float, help='Initial learning rate for training.')
 parser.add_argument('--model', default='unet', type=str, choices=['segresnet', 'unet', 'swinunetr', 'attentionunet', 'mambaunet'],
                     help='Model architecture to be used for training.')
-parser.add_argument('--img_dir', default='data/images', type=str, help='Directory containing image data.')
+parser.add_argument('--img_dir', default=['data/images'], nargs='+', type=str, 
+                    help='Directory containing image data. Pass multiple directories for more than one modality.')
 parser.add_argument('--mask_dir', default='data_2', type=str, help='Directory containing mask data.')
+parser.add_argument('--modality', default=['cdis'], nargs='+', type=str, choices=['cdis', 'dwi', 'adc'],
+                   help='One or more image modalities to evaluate')
 parser.add_argument('--prostate_mask', action='store_true', help='Flag to use prostate mask.')
 parser.add_argument('--size', default=128, type=int, help='Desired size of image and mask.')
 parser.add_argument('--val_interval', default=2, type=int, help='Epoch interval for evaluation on validation set.')
@@ -28,7 +30,6 @@ parser.add_argument('--scheduler', default=None, type=str, choices=[None, 'step'
                     help='Learning rate scheduler to use.')
 parser.add_argument('--optimizer', default='adam', type=str, choices=['adam', 'adamw', 'sgd'],
                     help='Optimizer to use for training.')
-parser.add_argument('--weights', default=None, type=str, help='Path to pretrained model weights to use.')
 parser.add_argument('--init_filters', default=32, type=int, help='Number of filters for model.')
 parser.add_argument('--save', action='store_true', help='Save results.')
 
@@ -40,25 +41,19 @@ model = get_model(args)
 optimizer = get_optimizer(args, model)
 scheduler = get_scheduler(args, optimizer)
 
-if args.weights:
-    model = load_weights(model, args.weights)
-
-img_paths = list_nii_paths(args.img_dir)
-mask_paths = list_prostate_paths(args.mask_dir)
-
 transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((args.size, args.size)),
     transforms.ToTensor(),
 ])
 
-dataset = CancerNetPCa(img_path=img_paths, mask_path=mask_paths, seed=args.seed, batch_size=args.batch_size,
-                        prostate=args.prostate_mask, transform=transform)
+dataset = CancerNetPCa(img_dir=args.img_dir, mask_dir=args.mask_dir, modality=args.modality, seed=args.seed, 
+                       batch_size=args.batch_size, prostate=args.prostate_mask, transform=transform)
 
 loss_ce = nn.BCEWithLogitsLoss(reduction='mean')
 dice_metric = DiceMetric(include_background=True, reduction='mean', get_not_nans=False)
 
-dir = f'{args.prostate_mask*"pro-"}{args.model}'
+dir = f'{"-".join(sorted(args.modality))}/{args.prostate_mask*"pro-"}{args.model}'
 
 if args.save:
     count = 1
@@ -70,8 +65,8 @@ if args.save:
     
     weight_dir = f'models/{dir}-{count}'
     weight_path = f'{weight_dir}/CancerNetPCa.pth'
-    os.mkdir(unique_dir)
-    os.mkdir(weight_dir)
+    os.makedirs(unique_dir, exist_ok=True)
+    os.makedirs(weight_dir, exist_ok=True)
 
 print('Starting Training')
 

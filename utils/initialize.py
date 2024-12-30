@@ -11,20 +11,27 @@ def get_model(args):
     Returns:
         Initialization of model.
     """
+    modality_channels = {
+        'dwi': 3,
+        'adc': 1,
+        'cdis': 1
+    }
+    in_channels = sum([modality_channels[m] for m in args.modality])
+    
     if args.model == 'segresnet':
         return monai.networks.nets.SegResNet(
             spatial_dims=2,
             blocks_down=[1, 2, 2, 4],
             blocks_up=[1, 1, 1],
             init_filters=args.init_filters,
-            in_channels=1,
+            in_channels=in_channels,
             out_channels=1,
             dropout_prob=0.2,
         )
     elif args.model =='unet':
         return monai.networks.nets.UNet(
             spatial_dims=2,
-            in_channels=1,
+            in_channels=in_channels,
             out_channels=1,
             channels=(16, 32, 64, 128, 256),
             strides=(2, 2, 2, 2),
@@ -33,14 +40,14 @@ def get_model(args):
     elif args.model == 'swinunetr':
         return monai.networks.nets.SwinUNETR(
             spatial_dims=2,
-            in_channels=1,
+            in_channels=in_channels,
             out_channels=1,
             img_size=(args.size, args.size)
         )
     elif args.model == 'attentionunet':
         return monai.networks.nets.AttentionUnet(
             spatial_dims=2,
-            in_channels=1,
+            in_channels=in_channels,
             out_channels=1,
             channels=(16, 32, 64, 128, 256),
             strides=(2, 2, 2, 2)
@@ -48,14 +55,14 @@ def get_model(args):
     elif args.model == 'mambaunet':
         return LightMUNet(
             spatial_dims=2,
-            in_channels=1,
+            in_channels=in_channels,
             out_channels=1,
             init_filters=args.init_filters,
             blocks_down=(1, 2, 2, 4),
             blocks_up=(1, 1, 1)
         )
     else:
-        raise ValueError(f"Invalid model name: {args.model}. Choose from 'segresnet', 'unet', 'swinunetr', 'attentionunet', or 'mambaunet'.")
+        raise ValueError(f"Invalid model name: {args.model}")
 
 def get_optimizer(args, model):
     """Retrieves and initializes select optimizer.
