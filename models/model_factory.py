@@ -5,9 +5,7 @@ from typing import List
 
 
 def get_model(
-    model_name: str,
-    modalities: List[str] = ["cdis"],
-    init_filters: int = 32
+    model_name: str, modalities: List[str] = ["cdis"], init_filters: int = 32
 ) -> nn.Module:
     """Retrieves and initializes select model architecture.
 
@@ -46,7 +44,7 @@ def get_model(
             spatial_dims=2,
             in_channels=in_channels,
             out_channels=1,
-            #img_size=(size, size),
+            # img_size=(size, size),
         )
     elif model_name == "attentionunet":
         return monai.networks.nets.AttentionUnet(
