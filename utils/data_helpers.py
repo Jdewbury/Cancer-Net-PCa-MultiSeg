@@ -1,9 +1,43 @@
 import numpy as np
 from pathlib import Path
 import SimpleITK as sitk
+from typing import List, Dict, Union
+
+LESION_MASK_NAME = "lesion_mask.npy"
+PROSTATE_MASK_NAME = "prostate_mask.npy"
 
 
-def list_image_paths(root_dir: Path, modality: str = "cdis") -> list[Path]:
+class PatientData:
+    def __init__(self):
+        self.patients = {}
+
+    def _add_image_path(self, patient_id, modality, file_path):
+        if patient_id not in self.patients:
+            self.patients[patient_id] = {"images": {}, "masks": {}}
+        self.patients[patient_id]["images"][modality] = file_path
+
+    def _add_mask_path(self, patient_id, mask_type, file_path):
+        if patient_id not in self.patients:
+            self.patients[patient_id] = {"images": {}, "masks": {}}
+        self.patients[patient_id]["masks"][mask_type] = file_path
+
+    def __getitem__(self, key):
+        return self.patients[key]
+
+    def __len__(self):
+        return len(self.patients)
+
+    def items(self):
+        return self.patients.items()
+
+    def keys(self):
+        return np.array(list(self.patients.keys()))
+
+    def values(self):
+        return self.patients.values()
+
+
+def list_image_paths(root_dir: Path, modality: str = "cdis") -> List[Path]:
     """Gather all image paths in directory for specified modality.
 
     Args:
@@ -11,7 +45,7 @@ def list_image_paths(root_dir: Path, modality: str = "cdis") -> list[Path]:
         modality: desired modality of interest
 
     Returns:
-        Sorted list of image file paths.
+        Sorted list of image file paths
     """
     if modality in ["adc", "dwi"]:
         pattern = f"*{modality.upper()}.npy"
@@ -23,6 +57,41 @@ def list_image_paths(root_dir: Path, modality: str = "cdis") -> list[Path]:
         )
 
     return sorted(root_dir.rglob(pattern))
+
+
+def get_image_and_mask_paths(
+    img_dirs: List[Path], modalities: List[str], mask_dir: Path
+) -> Dict[str, dict]:
+    """Get the filepaths to the image(s) and masks for each patient.
+
+    Args:
+        img_dirs: directories to search for image files
+        modalities: corresponding image modalities of image directories
+        mask_dir: directory to corresponding segmentation masks
+
+    Returns:
+        dictionary containing image and mask paths for each patient
+    """
+    patient_files = PatientData()
+
+    for dir, m in zip(img_dirs, modalities):
+        file_paths = list_image_paths(dir, m)
+        if m in ["adc", "dwi"]:
+            for f in file_paths:
+                patient_files._add_image_path(f.parent.name, m, f)
+        elif m == "cdis":
+            for f in file_paths:
+                patient_files._add_image_path(f.name.split("_")[0], m, f)
+
+    lesion_paths = sorted(mask_dir.rglob(f"*{LESION_MASK_NAME}"))
+    prostate_paths = sorted(mask_dir.rglob(f"*{PROSTATE_MASK_NAME}"))
+
+    for f in lesion_paths:
+        patient_files._add_mask_path(f.parent.name, "lesion", f)
+    for f in prostate_paths:
+        patient_files._add_mask_path(f.parent.name, "prostate", f)
+
+    return patient_files
 
 
 def load_image(file_path: Path, modality: str = "cdis") -> np.ndarray:
@@ -39,6 +108,7 @@ def load_image(file_path: Path, modality: str = "cdis") -> np.ndarray:
         img_sitk = sitk.ReadImage(file_path)
         img = sitk.GetArrayFromImage(img_sitk).astype(np.float32)
         img = np.nan_to_num(img)
+        img = np.transpose(img, (2, 1, 0))
     elif modality == "adc":
         img_np = np.load(file_path, allow_pickle=True)
         img_t = np.transpose(img_np, (2, 1, 0))

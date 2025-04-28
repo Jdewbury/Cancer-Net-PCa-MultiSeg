@@ -2,39 +2,50 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-from utils.data_helpers import list_image_paths, load_image, normalize_intensity
+import torchvision.transforms as transforms
+from utils.data_helpers import get_image_and_mask_paths, load_image, normalize_intensity
 from pathlib import Path
-
-LESION_MASK_NAME = "lesion_mask.npy"
-PROSTATE_MASK_NAME = "prostate_mask.npy"
+from sklearn.model_selection import KFold
+from typing import List, Dict
 
 
 class CancerNetPCaDataset(Dataset):
     def __init__(
         self,
-        img_paths: list[Path],
-        mask_paths: list[Path],
-        modalities: list[str],
+        patient_files: Dict[str, dict],
+        patient_ids: List[str],
+        modalities: List[str] = ["cdis"],
         prostate: bool = False,
-        transform=None,
+        target_size: tuple = (128, 128)
     ):
-        self.img_paths = img_paths
-        self.mask_paths = mask_paths
+        self.patient_files = patient_files
+        self.patient_ids = patient_ids
         self.modalities = modalities
         self.prostate = prostate
-        self.transform = transform
+        self.target_size = target_size
+        
+        self.img_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(target_size), # uses bilinear interp 
+            transforms.ToTensor(),
+        ])
+        self.mask_transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(target_size, interpolation=transforms.InterpolationMode.NEAREST), # nearest interp for mask
+            transforms.ToTensor(),
+        ])
 
         # load and prepare data
         self.data = self._prepare_data()
 
     def _prepare_data(self):
         data = []
-        for i in range(len(self.mask_paths)):
+        for p_id in self.patient_ids:
             modality_imgs = []
-            for m_idx, modality in enumerate(self.modalities):
+            for m in self.modalities:
                 # load and normalize the image
-                img_path = self.img_paths[m_idx][i]
-                mod_img = load_image(img_path, modality)
+                img_path = self.patient_files[p_id]["images"][m]
+                mod_img = load_image(img_path, m)
                 mod_img = normalize_intensity(mod_img)
 
                 # add channel dimension if needed
@@ -46,7 +57,8 @@ class CancerNetPCaDataset(Dataset):
             # stack modalities along channel dimension
             img_np = np.concatenate(modality_imgs, axis=0)
 
-            lesion_path, prostate_path = self.mask_paths[i]
+            lesion_path = self.patient_files[p_id]["masks"]["lesion"]
+            prostate_path = self.patient_files[p_id]["masks"]["prostate"]
             lesion_np = np.load(lesion_path)
             prostate_np = np.load(prostate_path)
 
@@ -58,18 +70,7 @@ class CancerNetPCaDataset(Dataset):
             mask = np.flip(mask_t, axis=1)
             mask = (mask > 0).astype(np.float32)
 
-            # extract 2D slices from 3D volumes
-            num_slices = min(img_np.shape[2], mask.shape[2])
-            for s_idx in range(num_slices):
-                if len(img_np.shape) == 4:
-                    # take all channels for the current slice
-                    img_slice = img_np[:, :, :, s_idx].astype(np.float32)
-                else:
-                    img_slice = img_np[:, :, s_idx].astype(np.float32)
-
-                mask_slice = mask[:, :, s_idx].astype(np.float32)
-
-                data.append((img_slice, mask_slice))
+            data.append((img_np, mask))
 
         return data
 
@@ -77,44 +78,51 @@ class CancerNetPCaDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        img, mask = self.data[idx]
+        img_volume, mask_volume = self.data[idx]
+        
+        c, h, w, d = img_volume.shape
+        
+        img_resized = torch.zeros(c, self.target_size[0], self.target_size[1], d)
+        mask_resized = torch.zeros(1, self.target_size[0], self.target_size[1], d)
 
-        if self.transform is not None:
-            if len(img.shape) == 3:
-                transformed_channels = []
-                for c in range(img.shape[0]):
-                    transformed_channels.append(self.transform(img[c]))
-                img_slice = torch.cat(transformed_channels, dim=0)
-            else:
-                img_slice = self.transform(img)
+        for d_idx in range(d):
+            for c_idx in range(c):
+                img_slice = img_volume[c_idx, :, :, d_idx].astype(np.float32)
+                img_resized_slice = self.img_transform(img_slice)
+                img_resized[c_idx, :, :, d_idx] = img_resized_slice
+                
+            mask_slice = mask_volume[:, :, d_idx].astype(np.float32)
+            mask_resized_slice = self.mask_transform(mask_slice)
+            mask_resized[0, :, :, d_idx] = mask_resized_slice
 
-            mask_slice = self.transform(mask)
-
-        return img_slice, mask_slice
+        return img_resized, mask_resized
 
 
 class CancerNetPCa:
     def __init__(
         self,
-        img_dirs: list[Path],
-        mask_dir: Path,
-        modalities: list[str] = ["cdis"],
-        seed: int = 42,
-        batch_size: int = 10,
-        train_split: float = 0.7,
+        img_dirs: List[str],
+        mask_dir: str,
+        modalities: List[str] = ["cdis"],
+        num_folds: int = 5,
+        fold_idx: int = 0,
         test_split: float = 0.15,
+        batch_size: int = 10,
         prostate: bool = False,
-        transform=None,
+        seed: int = 42,
         num_workers: int = None,
+        target_size: float = (128, 128)
     ):
-        self.img_dirs = img_dirs
-        self.mask_dir = mask_dir
+        self.img_dirs = [Path(f) for f in img_dirs if not isinstance(f, Path)]
+        self.mask_dir = Path(mask_dir) if not isinstance(mask_dir, Path) else mask_dir
         self.modalities = modalities
-        self.batch_size = batch_size
-        self.train_split = train_split
+        self.num_folds = num_folds
+        self.fold_idx = fold_idx
         self.test_split = test_split
+        self.batch_size = batch_size
         self.prostate = prostate
-        self.transform = transform
+        self.seed = seed
+        self.target_size = target_size
 
         np.random.seed(seed)
 
@@ -123,57 +131,59 @@ class CancerNetPCa:
         else:
             self.num_workers = num_workers
 
-        self._create_dataset()
+        self._create_data_folds()
         self._create_dataloader()
 
-    def _create_dataset(self):
+    def _create_data_folds(self):
         # get image and mask paths
-        img_paths = np.array(
-            [list_image_paths(dir, m) for dir, m in zip(self.img_dirs, self.modalities)]
+        patient_files = get_image_and_mask_paths(
+            self.img_dirs, self.modalities, self.mask_dir
         )
-        lesion_paths = sorted(self.mask_dir.rglob(f"*{LESION_MASK_NAME}"))
-        prostate_paths = sorted(self.mask_dir.rglob(f"*{PROSTATE_MASK_NAME}"))
 
-        mask_pairs = np.array([lesion_paths, prostate_paths])
+        print(len(patient_files))
 
-        dataset_size = len(mask_pairs)
-        idxs = np.arange(dataset_size)
-        np.random.shuffle(idxs)
+        patient_ids = patient_files.keys()
+        patient_ids = np.random.permutation(patient_ids)
+        test_size = int(len(patient_ids) * self.test_split)
+        test_patients, train_val_patients = np.split(patient_ids, [test_size])
 
-        train_size = int(self.train_split * dataset_size)
-        test_size = int(self.test_split * dataset_size)
-        val_size = dataset_size - train_size - test_size
+        # create k folds
+        folds = {}
+        k_folds = KFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+        for fold_idx, (train_idx, val_idx) in enumerate(
+            k_folds.split(train_val_patients)
+        ):
+            train_patients = [train_val_patients[i] for i in train_idx]
+            val_patients = [train_val_patients[i] for i in val_idx]
 
-        train_idx = idxs[:train_size]
-        test_idx = idxs[train_size : train_size + test_size]
-        val_idx = idxs[train_size + test_size :]
+            folds[fold_idx] = {"train": train_patients, "val": val_patients}
 
         self.train_dataset = CancerNetPCaDataset(
-            img_paths=img_paths[:, train_idx],
-            mask_paths=mask_pairs[:, train_idx],
+            patient_files=patient_files,
+            patient_ids=folds[self.fold_idx]["train"],
             modalities=self.modalities,
             prostate=self.prostate,
-            transform=self.transform,
+            target_size=self.target_size
         )
 
         self.val_dataset = CancerNetPCaDataset(
-            img_paths=img_paths[:, val_idx],
-            mask_paths=mask_pairs[:, val_idx],
+            patient_files=patient_files,
+            patient_ids=folds[self.fold_idx]["val"],
             modalities=self.modalities,
             prostate=self.prostate,
-            transform=self.transform,
+            target_size=self.target_size
         )
 
         self.test_dataset = CancerNetPCaDataset(
-            img_paths=img_paths[:, test_idx],
-            mask_paths=mask_pairs[:, test_idx],
+            patient_files=patient_files,
+            patient_ids=test_patients,
             modalities=self.modalities,
             prostate=self.prostate,
-            transform=self.transform,
+            target_size=self.target_size
         )
 
         print(
-            f"Dataset split: {train_size} train, {val_size} validation, {test_size} test samples"
+            f"Dataset split: {len(self.train_dataset)} train, {len(self.val_dataset)} validation, {len(self.test_dataset)} test samples"
         )
 
     def _create_dataloader(self):
