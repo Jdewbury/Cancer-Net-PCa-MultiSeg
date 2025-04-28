@@ -16,24 +16,30 @@ class CancerNetPCaDataset(Dataset):
         patient_ids: List[str],
         modalities: List[str] = ["cdis"],
         prostate: bool = False,
-        target_size: tuple = (128, 128)
+        target_size: tuple = (128, 128),
     ):
         self.patient_files = patient_files
         self.patient_ids = patient_ids
         self.modalities = modalities
         self.prostate = prostate
         self.target_size = target_size
-        
-        self.img_transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize(target_size), # uses bilinear interp 
-            transforms.ToTensor(),
-        ])
-        self.mask_transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize(target_size, interpolation=transforms.InterpolationMode.NEAREST), # nearest interp for mask
-            transforms.ToTensor(),
-        ])
+
+        self.img_transform = transforms.Compose(
+            [
+                transforms.ToPILImage(),
+                transforms.Resize(target_size),  # uses bilinear interp
+                transforms.ToTensor(),
+            ]
+        )
+        self.mask_transform = transforms.Compose(
+            [
+                transforms.ToPILImage(),
+                transforms.Resize(
+                    target_size, interpolation=transforms.InterpolationMode.NEAREST
+                ),  # nearest interp for mask
+                transforms.ToTensor(),
+            ]
+        )
 
         # load and prepare data
         self.data = self._prepare_data()
@@ -79,9 +85,9 @@ class CancerNetPCaDataset(Dataset):
 
     def __getitem__(self, idx):
         img_volume, mask_volume = self.data[idx]
-        
+
         c, h, w, d = img_volume.shape
-        
+
         img_resized = torch.zeros(c, self.target_size[0], self.target_size[1], d)
         mask_resized = torch.zeros(1, self.target_size[0], self.target_size[1], d)
 
@@ -90,7 +96,7 @@ class CancerNetPCaDataset(Dataset):
                 img_slice = img_volume[c_idx, :, :, d_idx].astype(np.float32)
                 img_resized_slice = self.img_transform(img_slice)
                 img_resized[c_idx, :, :, d_idx] = img_resized_slice
-                
+
             mask_slice = mask_volume[:, :, d_idx].astype(np.float32)
             mask_resized_slice = self.mask_transform(mask_slice)
             mask_resized[0, :, :, d_idx] = mask_resized_slice
@@ -111,7 +117,7 @@ class CancerNetPCa:
         prostate: bool = False,
         seed: int = 42,
         num_workers: int = None,
-        target_size: float = (128, 128)
+        target_size: float = (128, 128),
     ):
         self.img_dirs = [Path(f) for f in img_dirs if not isinstance(f, Path)]
         self.mask_dir = Path(mask_dir) if not isinstance(mask_dir, Path) else mask_dir
@@ -163,7 +169,7 @@ class CancerNetPCa:
             patient_ids=folds[self.fold_idx]["train"],
             modalities=self.modalities,
             prostate=self.prostate,
-            target_size=self.target_size
+            target_size=self.target_size,
         )
 
         self.val_dataset = CancerNetPCaDataset(
@@ -171,7 +177,7 @@ class CancerNetPCa:
             patient_ids=folds[self.fold_idx]["val"],
             modalities=self.modalities,
             prostate=self.prostate,
-            target_size=self.target_size
+            target_size=self.target_size,
         )
 
         self.test_dataset = CancerNetPCaDataset(
@@ -179,7 +185,7 @@ class CancerNetPCa:
             patient_ids=test_patients,
             modalities=self.modalities,
             prostate=self.prostate,
-            target_size=self.target_size
+            target_size=self.target_size,
         )
 
         print(

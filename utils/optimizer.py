@@ -2,7 +2,6 @@ import torch
 from torch import nn
 
 
-
 def get_optimizer(
     optimizer_name: str, model: nn.Module, learning_rate: float = 0.001
 ) -> torch.optim:
