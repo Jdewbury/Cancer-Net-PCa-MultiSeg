@@ -2,7 +2,4 @@ __pycache__
 env/
 data/
 data_2/
-models/
-scores/
-evaluate/
-images/
+results/
