@@ -106,8 +106,8 @@ def load_image(file_path: Path, modality: str = "cdis") -> np.ndarray:
     """
     if modality == "cdis":
         img_sitk = sitk.ReadImage(file_path)
-        img = sitk.GetArrayFromImage(img_sitk).astype(np.float32)
-        img = np.nan_to_num(img)
+        img = sitk.GetArrayFromImage(img_sitk).astype(np.uint8)
+        img = np.nan_to_num(img).astype(np.float32)
         img = np.transpose(img, (2, 1, 0))
     elif modality == "adc":
         img_np = np.load(file_path, allow_pickle=True)
