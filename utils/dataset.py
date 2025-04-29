@@ -15,14 +15,14 @@ class CancerNetPCaDataset(Dataset):
         patient_files: Dict[str, dict],
         patient_ids: List[str],
         modalities: List[str] = ["cdis"],
-        prostate: bool = False,
         target_size: tuple = (128, 128),
+        lesion_mask: bool = True,
     ):
         self.patient_files = patient_files
         self.patient_ids = patient_ids
         self.modalities = modalities
-        self.prostate = prostate
         self.target_size = target_size
+        self.lesion_mask = lesion_mask
 
         self.img_transform = transforms.Compose(
             [
@@ -63,16 +63,15 @@ class CancerNetPCaDataset(Dataset):
             # stack modalities along channel dimension
             img_np = np.concatenate(modality_imgs, axis=0)
 
-            lesion_path = self.patient_files[p_id]["masks"]["lesion"]
-            prostate_path = self.patient_files[p_id]["masks"]["prostate"]
-            lesion_np = np.load(lesion_path)
-            prostate_np = np.load(prostate_path)
+            if self.lesion_mask:
+                mask_path = self.patient_files[p_id]["masks"]["lesion"]
+            else:
+                mask_path = self.patient_files[p_id]["masks"]["prostate"]
 
-            if self.prostate:
-                lesion_np *= prostate_np
+            mask_np = np.load(mask_path)
 
             # align mask with image
-            mask_t = np.transpose(lesion_np, (2, 1, 0))
+            mask_t = np.transpose(mask_np, (2, 1, 0))
             mask = np.flip(mask_t, axis=1)
             mask = (mask > 0).astype(np.float32)
 
@@ -114,7 +113,7 @@ class CancerNetPCa:
         fold_idx: int = 0,
         test_split: float = 0.15,
         batch_size: int = 10,
-        prostate: bool = False,
+        lesion_mask: bool = True,
         seed: int = 42,
         num_workers: int = None,
         target_size: float = (128, 128),
@@ -126,7 +125,7 @@ class CancerNetPCa:
         self.fold_idx = fold_idx
         self.test_split = test_split
         self.batch_size = batch_size
-        self.prostate = prostate
+        self.lesion_mask = lesion_mask
         self.seed = seed
         self.target_size = target_size
 
@@ -168,24 +167,24 @@ class CancerNetPCa:
             patient_files=patient_files,
             patient_ids=folds[self.fold_idx]["train"],
             modalities=self.modalities,
-            prostate=self.prostate,
             target_size=self.target_size,
+            lesion_mask=self.lesion_mask,
         )
 
         self.val_dataset = CancerNetPCaDataset(
             patient_files=patient_files,
             patient_ids=folds[self.fold_idx]["val"],
             modalities=self.modalities,
-            prostate=self.prostate,
             target_size=self.target_size,
+            lesion_mask=self.lesion_mask,
         )
 
         self.test_dataset = CancerNetPCaDataset(
             patient_files=patient_files,
             patient_ids=test_patients,
             modalities=self.modalities,
-            prostate=self.prostate,
             target_size=self.target_size,
+            lesion_mask=self.lesion_mask,
         )
 
         print(
