@@ -1,7 +1,10 @@
 import numpy as np
 from pathlib import Path
 import SimpleITK as sitk
-from typing import List, Dict, Union
+from typing import List, Dict
+import json
+import random
+import torch
 
 LESION_MASK_NAME = "lesion_mask.npy"
 PROSTATE_MASK_NAME = "prostate_mask.npy"
@@ -150,3 +153,28 @@ def normalize_intensity(img: np.ndarray) -> np.ndarray:
         )
 
     return norm_img
+
+
+def save_json(file_path: Path, data: Dict) -> None:
+    """Save data results as JSON.
+
+    Args:
+        file_path: path to save data
+        data: results to save
+    """
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+def set_all_seeds(seed):
+    """Set all seeds to make results reproducible.
+
+    Args:
+        seed: desired seed to set
+    """
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)

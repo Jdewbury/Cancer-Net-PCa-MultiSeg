@@ -109,25 +109,25 @@ class CancerNetPCa:
         img_dirs: List[str],
         mask_dir: str,
         modalities: List[str] = ["cdis"],
+        target_size: tuple = (128, 128),
+        lesion_mask: bool = True,
         num_folds: int = 5,
         fold_idx: int = 0,
         test_split: float = 0.15,
         batch_size: int = 10,
-        lesion_mask: bool = True,
         seed: int = 42,
         num_workers: int = None,
-        target_size: float = (128, 128),
     ):
         self.img_dirs = [Path(f) for f in img_dirs if not isinstance(f, Path)]
         self.mask_dir = Path(mask_dir) if not isinstance(mask_dir, Path) else mask_dir
         self.modalities = modalities
+        self.target_size = target_size
+        self.lesion_mask = lesion_mask
         self.num_folds = num_folds
         self.fold_idx = fold_idx
         self.test_split = test_split
         self.batch_size = batch_size
-        self.lesion_mask = lesion_mask
         self.seed = seed
-        self.target_size = target_size
 
         np.random.seed(seed)
 
