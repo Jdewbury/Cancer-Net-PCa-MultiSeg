@@ -17,7 +17,7 @@ This [dataset](https://www.kaggle.com/datasets/hgunraj/cancer-net-pca-data) is b
 ## Model Training and Inference
 If you want to train and evaluate a network from scratch, you can run the provided file using the default arguments:
 ```
-python3 CancerNetPCaSeg.py
+python3 CancerNetPCaSeg.py --img_dirs IMG_DIRS ... --mask_dir MASK_DIR
 ```
 You can modify the default arguments in the [config](utils/config.py) file, or specify CLI arguments when running
 
