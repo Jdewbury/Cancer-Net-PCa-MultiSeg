@@ -5,7 +5,10 @@ from typing import List
 
 
 def get_model(
-    model_name: str, modalities: List[str] = ["cdis"], init_filters: int = 32
+    model_name: str,
+    modalities: List[str] = ["cdis"],
+    init_filters: int = 32,
+    input_size: tuple = (128, 128),
 ) -> nn.Module:
     """Retrieves and initializes select model architecture.
 
@@ -13,6 +16,7 @@ def get_model(
         model_name: name of desired model to load
         modalities: which modalities are being used
         init_filters: number of output channels in initial conv layer
+        input_size: size of input image
 
     Returns:
         Initialization of model
@@ -44,7 +48,7 @@ def get_model(
             spatial_dims=2,
             in_channels=in_channels,
             out_channels=1,
-            # img_size=(size, size),
+            img_size=input_size,
         )
     elif model_name == "attentionunet":
         return monai.networks.nets.AttentionUnet(
