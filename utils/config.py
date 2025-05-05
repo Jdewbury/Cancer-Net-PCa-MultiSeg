@@ -8,7 +8,7 @@ class Config:
     img_dirs: List[str] = field(default_factory=lambda: ["data/images"])
     mask_dir: str = "data_2"
     modalities: List[str] = field(default_factory=lambda: ["cdis"])
-    use_lesion_mask: bool = True
+    target_size: tuple = (128, 128)
 
     # training params
     batch_size: int = 1
