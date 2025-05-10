@@ -103,6 +103,11 @@ def parse_args():
         help=f"Learning rate step size. Default: {config.lr_step}",
     )
     parser.add_argument(
+        "--lr_patience",
+        type=int,
+        help=f"Learning rate patience before reduction. Default: {config.lr_patience}",
+    )
+    parser.add_argument(
         "--output_dir",
         type=str,
         help=f"Output directory to save training results. Default: {config.output_dir}",
@@ -169,6 +174,7 @@ def run_training_and_evaluation():
             optimizer=optimizer,
             epochs=config["epochs"],
             lr_step=config["lr_step"],
+            lr_patience=config["lr_patience"],
         )
         # evaluation metrics
         loss_function = torch.nn.BCEWithLogitsLoss(reduction="mean")
@@ -176,7 +182,7 @@ def run_training_and_evaluation():
             include_background=True, reduction="mean", get_not_nans=False
         )
 
-        best_model_path = train(
+        best_val_dice, best_model_path = train(
             output_dir=fold_dir,
             dataset=dataset,
             model=model,
@@ -189,16 +195,17 @@ def run_training_and_evaluation():
             early_stopping_patience=config["early_stopping_patience"],
         )
 
-        # evaluate on test set
-        test_dir = fold_dir / "inference"
-        test_dir.mkdir(parents=True, exist_ok=True)
+        if best_val_dice != 0.0:
+            # evaluate on test set
+            test_dir = fold_dir / "inference"
+            test_dir.mkdir(parents=True, exist_ok=True)
 
-        checkpoint = torch.load(best_model_path, weights_only=False)
-        model.load_state_dict(checkpoint["model_state_dict"])
+            checkpoint = torch.load(best_model_path, weights_only=False)
+            model.load_state_dict(checkpoint["model_state_dict"])
 
-        test_dice = evaluate(model, dataset.test, dice_metric, device)
-        results = {"test_dice": test_dice}
-        save_json(test_dir / "test_results.json", results)
+            test_dice = evaluate(model, dataset.test, dice_metric, device)
+            results = {"test_dice": test_dice}
+            save_json(test_dir / "test_results.json", results)
 
 
 if __name__ == "__main__":

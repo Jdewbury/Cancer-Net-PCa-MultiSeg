@@ -4,6 +4,7 @@ from utils.dataset import CancerNetPCa
 from monai.metrics import DiceMetric
 from utils.eval_helpers import evaluate
 from utils.data_helpers import save_json
+from typing import Tuple
 
 
 def train(
@@ -17,7 +18,7 @@ def train(
     dice_metric: DiceMetric,
     epochs: int = 200,
     early_stopping_patience: int = 15,
-) -> Path:
+) -> Tuple[float, Path]:
     training_dir = output_dir / "train"
     training_dir.mkdir(parents=True, exist_ok=True)
 
@@ -99,4 +100,4 @@ def train(
     }
     save_json(results_path, results)
 
-    return best_model_path
+    return best_val_dice, best_model_path

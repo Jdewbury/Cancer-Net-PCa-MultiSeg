@@ -35,7 +35,11 @@ def get_optimizer(
 
 
 def get_scheduler(
-    scheduler_name: str, optimizer: torch.optim, epochs: int, lr_step: float = 0.1
+    scheduler_name: str,
+    optimizer: torch.optim,
+    epochs: int,
+    lr_step: float = 0.1,
+    lr_patience: int = 7,
 ) -> torch.optim.lr_scheduler:
     """Retrieves and initializes select learning rate scheduler.
 
@@ -44,11 +48,22 @@ def get_scheduler(
         optimizer: The optimizer whose learning rate will be scheduled
         epochs: number of epochs used during training
         lr_step: step size of learning rate
+        patience: number of epochs without improvement for learning rate to be reduced
 
     Returns:
         Initialization of learning rate scheduler, or None if no scheduler is specified
     """
-    if scheduler_name == "step":
+    if scheduler_name == "plateau":
+        print("Using ReduceLROnPlateau")
+        return torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="max",
+            factor=lr_step,
+            patience=lr_patience,
+            threshold=0.001,
+            min_lr=1e-6,
+        )
+    elif scheduler_name == "step":
         print("Using StepLR")
         return torch.optim.lr_scheduler.StepLR(
             optimizer, step_size=(epochs // 4), gamma=lr_step

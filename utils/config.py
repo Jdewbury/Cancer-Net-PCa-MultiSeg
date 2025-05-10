@@ -27,6 +27,7 @@ class Config:
     optimizer: str = "adam"
     scheduler: str = "step"
     lr_step: float = 0.1
+    lr_patience: int = 7
 
     # output params
     output_dir: str = "results"
