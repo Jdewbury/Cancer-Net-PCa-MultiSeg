@@ -18,6 +18,7 @@ class Config:
     test_split: float = 0.1
     seed: int = 42
     early_stopping_patience: int = 15
+    min_improvement: float = 0.0005
 
     # model params
     model: str = "unet"

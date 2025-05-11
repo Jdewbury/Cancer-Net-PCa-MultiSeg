@@ -18,6 +18,7 @@ def train(
     dice_metric: DiceMetric,
     epochs: int = 200,
     early_stopping_patience: int = 15,
+    min_improvement: float = 0.0005,
 ) -> Tuple[float, Path]:
     training_dir = output_dir / "train"
     training_dir.mkdir(parents=True, exist_ok=True)
@@ -73,6 +74,10 @@ def train(
             current_lr = optimizer.param_groups[0]["lr"]
 
         if val_dice > best_val_dice:
+            # only reset patience if the improvement is above the minimum threshold
+            if (val_dice - best_val_dice) > min_improvement:
+                early_stopping_counter = 0
+
             best_val_dice = val_dice
             best_val_epoch = epoch_idx
             torch.save(
@@ -84,7 +89,6 @@ def train(
                 },
                 best_model_path,
             )
-            early_stopping_counter = 0
         else:
             early_stopping_counter += 1
 

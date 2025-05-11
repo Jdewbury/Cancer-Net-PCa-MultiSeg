@@ -75,6 +75,11 @@ def parse_args():
         help=f"Number of epochs without improvement for early stopping. Default: {config.early_stopping_patience}",
     )
     parser.add_argument(
+        "--min_improvement",
+        type=float,
+        help=f"Minimum dice improvement to reset patience counter. Default: {config.min_improvement}",
+    )
+    parser.add_argument(
         "--model",
         type=str,
         choices=["segresnet", "unet", "swinunetr", "attentionunet", "mambaunet"],
@@ -193,6 +198,7 @@ def run_training_and_evaluation():
             dice_metric=dice_metric,
             epochs=config["epochs"],
             early_stopping_patience=config["early_stopping_patience"],
+            min_improvement=config["min_improvement"],
         )
 
         if best_val_dice != 0.0:
