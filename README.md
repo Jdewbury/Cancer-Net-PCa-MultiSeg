@@ -24,10 +24,11 @@ You can modify the default arguments in the [config](utils/config.py) file, or s
 Full CLI:
 ```
 usage: CancerNetPCaSeg.py [-h] [--img_dirs IMG_DIRS [IMG_DIRS ...]] [--mask_dir MASK_DIR] [--modalities {cdis,dwi,adc} [{cdis,dwi,adc} ...]]
-                            [--target_size TARGET_SIZE] [--batch_size BATCH_SIZE] [--epochs EPOCHS] [--learning_rate LEARNING_RATE] [--num_folds NUM_FOLDS]
-                            [--test_split TEST_SPLIT] [--seed SEED] [--early_stopping_patience EARLY_STOPPING_PATIENCE]
-                            [--model {segresnet,unet,swinunetr,attentionunet,mambaunet}] [--init_filters INIT_FILTERS] [--optimizer {adam,adamw,sgd}]
-                            [--scheduler {None,step,cosine}] [--lr_step LR_STEP] [--output_dir OUTPUT_DIR] [--experiment_name EXPERIMENT_NAME]
+                          [--target_size TARGET_SIZE] [--batch_size BATCH_SIZE] [--epochs EPOCHS] [--learning_rate LEARNING_RATE] [--num_folds NUM_FOLDS]
+                          [--test_split TEST_SPLIT] [--seed SEED] [--early_stopping_patience EARLY_STOPPING_PATIENCE] [--min_improvement MIN_IMPROVEMENT]
+                          [--model {segresnet,unet,swinunetr,attentionunet,mambaunet}] [--init_filters INIT_FILTERS] [--optimizer {adam,adamw,sgd}]
+                          [--scheduler {None,step,cosine,plateau}] [--lr_step LR_STEP] [--lr_patience LR_PATIENCE] [--output_dir OUTPUT_DIR]
+                          [--experiment_name EXPERIMENT_NAME]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -50,15 +51,19 @@ optional arguments:
   --seed SEED           Seed to use for splitting dataset. Default: 42
   --early_stopping_patience EARLY_STOPPING_PATIENCE
                         Number of epochs without improvement for early stopping. Default: 15
+  --min_improvement MIN_IMPROVEMENT
+                        Minimum dice improvement to reset patience counter. Default: 0.0005
   --model {segresnet,unet,swinunetr,attentionunet,mambaunet}
                         Model architecture to be used for training. Default: unet
   --init_filters INIT_FILTERS
                         Number of filters for model. Default: 32
   --optimizer {adam,adamw,sgd}
                         Optimizer to use for training. Default: adam
-  --scheduler {None,step,cosine}
-                        Learning rate scheduler to use. Default: step
+  --scheduler {None,step,cosine,plateau}
+                        Learning rate scheduler to use. Default: plateau
   --lr_step LR_STEP     Learning rate step size. Default: 0.1
+  --lr_patience LR_PATIENCE
+                        Learning rate patience before reduction. Default: 7
   --output_dir OUTPUT_DIR
                         Output directory to save training results. Default: results
   --experiment_name EXPERIMENT_NAME
