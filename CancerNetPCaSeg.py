@@ -94,7 +94,7 @@ def parse_args():
     parser.add_argument(
         "--scheduler",
         type=str,
-        choices=[None, "step", "cosine"],
+        choices=[None, "step", "cosine", "plateau"],
         help=f"Learning rate scheduler to use. Default: {config.scheduler}",
     )
     parser.add_argument(

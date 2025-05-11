@@ -25,7 +25,7 @@ class Config:
 
     # optimizer params
     optimizer: str = "adam"
-    scheduler: str = "step"
+    scheduler: str = "plateau"
     lr_step: float = 0.1
     lr_patience: int = 7
 

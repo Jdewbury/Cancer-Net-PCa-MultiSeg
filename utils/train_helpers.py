@@ -60,14 +60,17 @@ def train(
         total_loss = epoch_loss / total_slices
         all_train_losses.append(total_loss)
 
-        if scheduler:
+        val_dice = evaluate(model, dataset.val, dice_metric, device)
+        all_val_dice.append(val_dice)
+
+        if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            scheduler.step(val_dice)
+            current_lr = optimizer.param_groups[0]["lr"]
+        elif scheduler:
             scheduler.step()
             current_lr = scheduler.get_last_lr()[0]
         else:
             current_lr = optimizer.param_groups[0]["lr"]
-
-        val_dice = evaluate(model, dataset.val, dice_metric, device)
-        all_val_dice.append(val_dice)
 
         if val_dice > best_val_dice:
             best_val_dice = val_dice
