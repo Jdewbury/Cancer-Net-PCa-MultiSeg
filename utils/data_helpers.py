@@ -1,7 +1,7 @@
 import numpy as np
 from pathlib import Path
 import SimpleITK as sitk
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import json
 import random
 import torch
@@ -153,6 +153,37 @@ def normalize_intensity(img: np.ndarray) -> np.ndarray:
         )
 
     return norm_img
+
+
+def get_bounding_box(mask: np.ndarray, padding: int = 10) -> Tuple[int]:
+    """Get the bounding box of the input mask (y, x, z)
+
+    Args:
+        mask: input mask to get bounding box
+        padding: desired padding to apply to mask
+
+    Returns:
+        Tuple with bounding box coordinates (y, x, z)
+    """
+    y_max, x_max, z_max = mask.shape
+    nonzero_idxs = np.nonzero(mask)
+
+    y_min, y_max = max(0, nonzero_idxs[0].min() - padding), min(
+        y_max, nonzero_idxs[0].max() + padding + 1
+    )
+    x_min, x_max = max(0, nonzero_idxs[1].min() - padding), min(
+        x_max, nonzero_idxs[1].max() + padding + 1
+    )
+    z_min, z_max = max(0, nonzero_idxs[2].min() - padding), min(
+        z_max, nonzero_idxs[2].max() + padding + 1
+    )
+
+    if y_min >= y_max or x_min >= x_max or z_min >= z_max:
+        raise ValueError(
+            f"Invalid bounding box: y=[{y_min}:{y_max}], x=[{x_min}:{x_max}], z=[{z_min}:{z_max}]"
+        )
+
+    return (y_min, y_max, x_min, x_max, z_min, z_max)
 
 
 def save_json(file_path: Path, data: Dict) -> None:
