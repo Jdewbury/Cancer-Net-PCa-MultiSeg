@@ -1,7 +1,7 @@
-import monai
-from .mamba_unet import LightMUNet
-from torch import nn
 from typing import List
+
+import monai
+from torch import nn
 
 
 def get_model(
@@ -57,15 +57,6 @@ def get_model(
             out_channels=1,
             channels=(16, 32, 64, 128, 256),
             strides=(2, 2, 2, 2),
-        )
-    elif model_name == "mambaunet":
-        return LightMUNet(
-            spatial_dims=2,
-            in_channels=in_channels,
-            out_channels=1,
-            init_filters=init_filters,
-            blocks_down=(1, 2, 2, 4),
-            blocks_up=(1, 1, 1),
         )
     else:
         raise ValueError(

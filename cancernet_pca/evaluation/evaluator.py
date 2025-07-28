@@ -1,6 +1,7 @@
 import torch
 from monai.metrics import DiceMetric
-from utils.dataset import CancerNetPCa
+
+from cancernet_pca.data import CancerNetPCa
 
 
 def evaluate(
@@ -8,27 +9,28 @@ def evaluate(
     dataloader: CancerNetPCa,
     dice_metric: DiceMetric,
     device: torch.device,
+    threshold: float = 0.5,
 ) -> float:
     model.to(device)
     model.eval()
+
+    dice_metric.reset()
 
     with torch.no_grad():
         for inputs, masks in dataloader:
             inputs = inputs.to(device)
             masks = masks.to(device)
 
-            pred_volume = torch.zeros_like(masks)
+            input_slices = inputs.squeeze(0).permute(3, 0, 1, 2)
+            outputs = model(input_slices)
 
-            for slice_idx in range(inputs.shape[-1]):
-                input_slice = inputs[..., slice_idx].squeeze(-1)
-                output = model(input_slice)
-
-                pred_slice = (torch.sigmoid(output) > 0.5).float()
-                pred_volume[..., slice_idx] = pred_slice
+            pred_volume = torch.sigmoid(outputs).permute(1, 2, 3, 0).unsqueeze(0)
+            pred_binary = (pred_volume > threshold).float()
 
             # compute Dice score
-            dice_metric(y_pred=pred_volume, y=masks)
+            dice_metric(y_pred=pred_binary, y=masks)
 
     dice_score = dice_metric.aggregate().item()
+    dice_metric.reset()
 
     return dice_score
