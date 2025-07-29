@@ -36,6 +36,9 @@ class Config:
     output_dir: str = "results"
     experiment_name: str = "cancer-net-pca-seg"
 
+    # ensemble args
+    experiment_dir: str = "results/cancer-net-pca-seg"
+
     def update_from_args(self) -> None:
         parser = argparse.ArgumentParser(description="CancerNet-PCa Segmentation")
 
@@ -164,6 +167,13 @@ class Config:
             "--experiment_name",
             type=str,
             help=f"Name of experiment. Default: {self.experiment_name}",
+        )
+
+        # ensemble args
+        parser.add_argument(
+            "--experiment_dir",
+            type=str,
+            help=f"Path to experiment directory containing fold results. Default: {self.experiment_dir}",
         )
 
         args = parser.parse_args()

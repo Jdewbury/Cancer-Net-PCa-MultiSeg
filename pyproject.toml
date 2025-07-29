@@ -2,7 +2,7 @@
 name = "cancernet-pca"
 version = "2.0.0"
 description = "Cancer-Net-PCa Segmentation"
-packages = [{include = "cancernet_pca"}]
+packages = [{include = "cancernet_pca_seg"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"

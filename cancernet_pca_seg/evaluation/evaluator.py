@@ -1,12 +1,11 @@
 import torch
 from monai.metrics import DiceMetric
-
-from cancernet_pca.data import CancerNetPCa
+from torch.utils.data import DataLoader
 
 
 def evaluate(
     model: torch.nn.Module,
-    dataloader: CancerNetPCa,
+    dataloader: DataLoader,
     dice_metric: DiceMetric,
     device: torch.device,
     threshold: float = 0.5,

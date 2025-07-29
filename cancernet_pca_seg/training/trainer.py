@@ -7,8 +7,8 @@ import torch
 from monai.metrics import DiceMetric
 from torch.utils.data import DataLoader
 
-from cancernet_pca.data.dataset import CancerNetPCa
-from cancernet_pca.utils.io import save_json
+from cancernet_pca_seg.data.dataset import CancerNetPCa
+from cancernet_pca_seg.utils.io import make_dir, save_json
 
 
 def set_all_seeds(seed):
@@ -116,8 +116,7 @@ def run_training(
     early_stopping_patience: int = 15,
     min_improvement: float = 0.0005,
 ) -> Tuple:
-    training_dir = output_dir / "train"
-    training_dir.mkdir(parents=True, exist_ok=True)
+    training_dir = make_dir(output_dir / "train")
 
     model.to(device)
     all_train_losses = []

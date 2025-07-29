@@ -12,7 +12,7 @@ for model in swinunetr attentionunet segresnet unet; do
         --modalities cdis \
         --img_dirs data/images \
         --mask_dir data_2 \
-        --output_dir "benchmark/lesion/cdis/$model" \
+        --output_dir "results/benchmark/lesion/cdis/$model" \
         --epochs 200 --lr_patience 15 --lr_step 0.5 \
         --early_stopping_patience 50 --min_improvement 0.001 \
         --scheduler plateau --optimizer adamw --use_lesion_mask true
@@ -28,7 +28,7 @@ for model in swinunetr attentionunet segresnet unet; do
         --modalities dwi \
         --img_dirs data_2 \
         --mask_dir data_2 \
-        --output_dir "benchmark/lesion/dwi/$model" \
+        --output_dir "results/benchmark/lesion/dwi/$model" \
         --epochs 200 --lr_patience 15 --lr_step 0.5 \
         --early_stopping_patience 50 --min_improvement 0.001 \
         --scheduler plateau --optimizer adamw --use_lesion_mask true
@@ -44,7 +44,7 @@ for model in swinunetr attentionunet segresnet unet; do
         --modalities adc \
         --img_dirs data_2 \
         --mask_dir data_2 \
-        --output_dir "benchmark/lesion/adc/$model" \
+        --output_dir "results/benchmark/lesion/adc/$model" \
         --epochs 200 --lr_patience 15 --lr_step 0.5 \
         --early_stopping_patience 50 --min_improvement 0.001 \
         --scheduler plateau --optimizer adamw --use_lesion_mask true

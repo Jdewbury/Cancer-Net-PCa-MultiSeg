@@ -3,16 +3,16 @@ from pathlib import Path
 import torch
 from monai.metrics import DiceMetric
 
-from cancernet_pca import CancerNetPCa, Config
-from cancernet_pca.evaluation import evaluate
-from cancernet_pca.models import get_model
-from cancernet_pca.training import (
+from cancernet_pca_seg import CancerNetPCa, Config
+from cancernet_pca_seg.evaluation import evaluate
+from cancernet_pca_seg.models import get_model
+from cancernet_pca_seg.training import (
     get_optimizer,
     get_scheduler,
     run_training,
     set_all_seeds,
 )
-from cancernet_pca.utils.io import make_dir, save_json
+from cancernet_pca_seg.utils.io import make_dir, save_json
 
 
 def train_and_evaluate_folds():
@@ -85,11 +85,11 @@ def train_and_evaluate_folds():
             min_improvement=config.min_improvement,
         )
 
-        print("training complete.")
+        print("Training complete")
 
         # evaluate on test set
         if best_model_path.exists() and best_val_dice != 0.0:
-            print("evaluating on test set")
+            print("Evaluating on test set")
             test_dir = make_dir(fold_dir / "inference")
 
             checkpoint = torch.load(best_model_path, weights_only=False)
@@ -105,7 +105,7 @@ def train_and_evaluate_folds():
             results = {"test_dice": test_dice}
             save_json(test_dir / "test_results.json", results)
 
-            print("test inference complete.")
+            print(f"Saved test inference results to {test_dir}")
 
 
 if __name__ == "__main__":
