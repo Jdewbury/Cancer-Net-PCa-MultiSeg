@@ -23,6 +23,9 @@ def evaluate(
             input_slices = inputs.squeeze(0).permute(3, 0, 1, 2)
             outputs = model(input_slices)
 
+            if isinstance(outputs, list):
+                outputs = outputs[-1]
+
             pred_volume = torch.sigmoid(outputs).permute(1, 2, 3, 0).unsqueeze(0)
             pred_binary = (pred_volume > threshold).float()
 

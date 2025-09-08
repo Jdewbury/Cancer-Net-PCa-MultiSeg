@@ -50,6 +50,9 @@ def find_optimal_threshold(
             input_slices = inputs.squeeze(0).permute(3, 0, 1, 2)
             outputs = model(input_slices)
 
+            if isinstance(outputs, list):
+                outputs = outputs[-1]
+
             pred_volume = torch.sigmoid(outputs).permute(1, 2, 3, 0).unsqueeze(0)
 
             all_predictions.append(pred_volume)
@@ -93,7 +96,11 @@ def train_step(
         mask_slices = mask_volume.squeeze(0).permute(3, 0, 1, 2)
 
         output = model(input_slices)
-        loss = loss_function(output, mask_slices)
+
+        if isinstance(output, list):
+            loss = sum(loss_function(o, mask_slices) for o in output)
+        else:
+            loss = loss_function(output, mask_slices)
 
         loss.backward()
         optimizer.step()

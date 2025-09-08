@@ -4,3 +4,4 @@ data/
 data_2/
 results/
 notebooks/
+!cancernet_pca_seg/data/*.py
