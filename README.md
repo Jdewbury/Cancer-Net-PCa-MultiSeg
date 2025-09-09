@@ -1,19 +1,3 @@
-# Cancer-Net PCa-Seg: Benchmarking Deep Learning Models for Prostate Cancer Segmentation Using Synthetic Correlated Diffusion Imaging
-
-![Sample dataset](https://github.com/Jdewbury/Cancer-Net-PCa-Seg/blob/main/src/sample.png)
-
-This repository contains modules and instructions for replicating and extending experiments featured in our paper:
-- Training scripts [scripts/benchmarks](scripts/benchmarks) to benchmark the select architectures on the PCa CDI<sup>s</sup> data and other available modalities
-- Ensemble inference scripts [scripts/inference](scripts/inference) for combining predictions across k-fold models using weighted soft ensembling
-
-
-## Dataset
-Cancer-Net PCa-Data is an open access benchmark dataset of volumetric correlated diffusion imaging (CDIs) data acquisitions of prostate cancer patients. Cancer-Net PCa-Data is a part of the Cancer-Net open source initiative dedicated to advancement in machine learning and imaging research to aid clinicians in the global fight against cancer.
-
-The volumetric CDIs data acquisitions in the Cancer-Net PCa-Data dataset were generated from a patient cohort of 200 patient cases acquired at Radboud University Medical Centre (Radboudumc) in the Prostate MRI Reference Center in Nijmegen, The Netherlands and made available as part of the SPIE-AAPM-NCI PROSTATEx Challenges. Masks derived from the PROSTATEx_masks repository are also provided which label regions of healthy prostate tissue, clinically significant prostate cancer (csPCa), and clinically insignificant prostate cancer (insPCa).
-
-This [dataset](https://www.kaggle.com/datasets/hgunraj/cancer-net-pca-data) is being used to train and validate our Cancer-Net PCa-Seg models for PCa lesion segmentation from CDIs data acquisitions.
-
 ## Model Training and Inference
 ### Single Model Training
 If you want to train and evaluate a network from scratch, you can run the provided training scripts:
