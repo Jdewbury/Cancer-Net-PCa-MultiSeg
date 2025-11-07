@@ -16,7 +16,7 @@ class Config:
     batch_size: int = 1
     epochs: int = 200
     learning_rate: float = 0.001
-    num_folds: int = 5
+    num_folds: int = 10
     test_split: float = 0.1
     seed: int = 42
     early_stopping_patience: int = 50
@@ -124,7 +124,14 @@ class Config:
         parser.add_argument(
             "--model",
             type=str,
-            choices=["segresnet", "unet", "swinunetr", "attentionunet", "mambaunet"],
+            choices=[
+                "segresnet",
+                "unet",
+                "swinunetr",
+                "attentionunet",
+                "unetr",
+                "unetplusplus",
+            ],
             help=f"Model architecture to be used for training. Default: {self.model}",
         )
         parser.add_argument(

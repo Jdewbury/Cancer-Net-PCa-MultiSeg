@@ -43,12 +43,24 @@ def get_model(
             strides=(2, 2, 2, 2),
             num_res_units=2,
         )
+    elif model_name == "unetplusplus":
+        return monai.networks.nets.BasicUNetPlusPlus(
+            spatial_dims=2,
+            in_channels=in_channels,
+            out_channels=1,
+        )
+    elif model_name == "unetr":
+        return monai.networks.nets.UNETR(
+            spatial_dims=2,
+            in_channels=in_channels,
+            out_channels=1,
+            img_size=input_size,
+        )
     elif model_name == "swinunetr":
         return monai.networks.nets.SwinUNETR(
             spatial_dims=2,
             in_channels=in_channels,
             out_channels=1,
-            img_size=input_size,
         )
     elif model_name == "attentionunet":
         return monai.networks.nets.AttentionUnet(
@@ -61,5 +73,5 @@ def get_model(
     else:
         raise ValueError(
             f"Invalid model name: {model_name}"
-            "Choose from 'segresnet', 'unet', 'swinunetr', 'attentionunet', or 'mambaunet'."
+            "Choose from 'segresnet', 'unet', 'unetplusplus', 'unetr', 'swinunetr', 'attentionunet', or 'mambaunet'."
         )
