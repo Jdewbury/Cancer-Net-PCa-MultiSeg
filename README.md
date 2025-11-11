@@ -1,3 +1,14 @@
+# Cancer-Net PCa-MultiSeg
+Official implementation of **"Cancer-Net PCa-MultiSeg: Multimodal Enhancement of Prostate Cancer Lesion Segmentation Using Synthetic Correlated Diffusion Imaging"** accepted to ML4H 2025 Findings Track.
+
+## Overview
+
+This repository provides a comprehensive benchmark for prostate cancer lesion segmentation using synthetic correlated diffusion imaging (CDI^s) enhancement. We evaluate six state-of-the-art segmentation architectures across multiple modality combinations, demonstrating that CDI^s reliably enhances or preserves segmentation performance in 94% of evaluated configurations.
+
+## Dataset
+
+This work uses the [Cancer-Net PCa-Data]([https://github.com/catai9/Cancer-Net-PCa-Data](https://arxiv.org/abs/2311.11647)) dataset, comprising 200 patients with co-registered CDI^s, DWI, and ADC sequences.
+
 ## Model Training and Inference
 ### Single Model Training
 If you want to train and evaluate a network from scratch, you can run the provided training scripts:
